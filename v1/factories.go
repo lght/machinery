@@ -41,6 +41,38 @@ func BrokerFactory(cnf *config.Config) (brokers.Broker, error) {
 	if strings.HasPrefix(cnf.Broker, "eager") {
 		return brokers.NewEagerBroker(), nil
 	}
+	
+	if strings.HasPrefix(cnf.Broker, "sqs://") {
+		parts := strings.Split(cnf.Broker, "sqs://")
+		if len (parts) != 2 {
+			return nil, fmt.Errorf(
+				"SQS broker connection string be in format sqs://access:secret:region@url, instead got %s",
+				cnf.Broker,
+			)
+		}
+		var accessKey, secretKey, region, url string
+		parts = strings.Split(parts[1], "@")
+		if len(parts) != 2 {
+			return nil, fmt.Errorf(
+				"SQS broker connection string be in format sqs://access:secret:region@url, instead got %s",
+				cnf.Broker,
+			)
+		}
+		url = "https://" + parts[1]
+		
+		parts = strings.Split(parts[0], ":")
+		if len(parts) != 3 {
+			return nil, fmt.Errorf(
+				"SQS broker connection string be in format sqs://access:secret:region@url, instead got %s",
+				cnf.Broker,
+			)
+		}
+		accessKey = parts[0]
+		secretKey = parts[1]
+		region = parts[2]
+		
+		return brokers.NewSQSBroker(cnf, accessKey, secretKey, region, url)
+	}
 
 	return nil, fmt.Errorf("Factory failed with broker URL: %v", cnf.Broker)
 }

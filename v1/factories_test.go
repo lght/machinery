@@ -66,6 +66,23 @@ func TestBrokerFactory(t *testing.T) {
 	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("conn = %v, want %v", actual, expected)
 	}
+	
+	// 1) SQS broker test
+	cnf = config.Config{
+		Broker: "sqs://accessKey:secretKey:eu-west-1@sqs.eu-west-1.amazonaws.com/123456789/machinery",
+		DefaultQueue: "machinery_tasks",
+	}
+	
+	actual, err = BrokerFactory(&cnf)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	
+	expected = brokers.NewSQSBroker(&cnf, "https://sqs.eu-west-1.amazonaws.com/123456789/machinery", "accessKey", "secretKey", "region")
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("connect = %v, want %v", actual, expected)
+	}
+	
 }
 
 func TestBrokerFactoryError(t *testing.T) {
